@@ -5,6 +5,13 @@ import { Link } from 'react-router-dom';
 
 
 const categories = ['전체', '책', '학습자료', '문구', '음식', '기타'];
+const categoryMap = {
+  책: 'book',
+  학습자료: 'study',
+  문구: 'stationery',
+  음식: 'food',
+  기타: 'general',
+};
 
 const PageContainer = styled.div`
   padding: 100px 32px 48px;
@@ -74,11 +81,11 @@ export function MarketPlace() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const params = category === '전체' ? {} : { category };
-        const res = await axiosInstance.get(
-          '/markets/products',
-          { params }
-        );
+        const paramObj = category === '전체' ? {} : { category: categoryMap[category] };
+
+        const res = await axiosInstance.get('/markets/products', {
+          params: paramObj,
+        });
         setProducts(res.data);
       } catch (err) {
         console.error('상품 목록 가져오기 실패:', err);
