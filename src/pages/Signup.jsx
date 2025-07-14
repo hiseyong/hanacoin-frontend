@@ -165,10 +165,10 @@ export function Signup(props) {
                     <Label htmlFor="password">password confirm</Label>
                     <Input id="passwordconfirm" type="password" placeholder="password confirm" onChange={(e)=>{setPasswordConfirm(e.target.value)}} value={passwordConfirm}/>
                 </div>
-                <Button onClick={signupHandle}>회원가입</Button>
+                <Button onClick={signupHandle}>{isLoading ? <Spinner /> : '회원가입'}</Button>
                 <SignupOption>
                 이미 계정이 있으신가요?
-                <Link to="/login">{isLoading ? <Spinner /> : '회원가입'}</Link>
+                <Link to="/login">로그인</Link>
                 </SignupOption>
             </LoginBox>
             </Container>
