@@ -1,6 +1,10 @@
 import styled from 'styled-components';
 import { useState } from 'react';
 import axiosInstance from '../auth/axiosInstance';
+import { ec as EC } from 'elliptic';
+import sha256 from 'crypto-js/sha256';
+
+const ec = new EC('secp256k1');
 
 const Overlay = styled.div`
   position: fixed;
@@ -16,11 +20,13 @@ const Overlay = styled.div`
 `;
 
 const ModalContent = styled.div`
-  background: white;
+  background: ${({ status }) =>
+    status === "true" ? '#e0f7f7' : status === "false" ? '#ffe0e0' : 'white'};
   padding: 24px;
   border-radius: 12px;
   max-width: 400px;
   width: 100%;
+  transition: background 0.3s ease;
 `;
 
 const ModalTitle = styled.h3`
@@ -48,46 +54,69 @@ const ModalButton = styled.button`
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  background-color: ${props => props.cancel ? '#ccc' : '#20a495'};
+  background-color: ${props => props.cancel ? '#ccc' : props.verified ? '#13b0a3' : '#20a495'};
   color: ${props => props.cancel ? '#333' : 'white'};
 
   &:hover {
-    background-color: ${props => props.cancel ? '#aaa' : '#1c8f84'};
+    background-color: ${props => props.cancel ? '#aaa' : props.verified ? '#0e958a' : '#1c8f84'};
   }
 `;
 
-export function SendModal({ onClose }) {
+export function SendModal({ onClose, publicKey }) {
   const [receiver, setReceiver] = useState('');
   const [amount, setAmount] = useState('');
+  const [verified, setVerified] = useState('null');
+  const [privateKey, setPrivateKey] = useState('');
 
-  const confirmSend = () => {
-    if (!receiver || !amount || parseFloat(amount) <= 0) {
-      alert('유효한 값을 입력하세요.');
-      return;
+  const verifySignature = () => {
+  try {
+    const tx = {
+      from: '',
+      to: receiver,
+      amount: parseFloat(amount),
+      timestamp: Date.now()
+    };
+
+    const msgHash = sha256(JSON.stringify(tx)).toString();
+
+    const key = ec.keyFromPrivate(privateKey);
+    const signature = key.sign(msgHash);
+
+    // 🔽 공개키 형식 보정 (04 prefix 추가)
+    const fixedPublicKey = publicKey.startsWith('04') ? publicKey : '04' + publicKey;
+    const recoveredKey = ec.keyFromPublic(fixedPublicKey, 'hex');
+
+    const isValid = recoveredKey.verify(msgHash, signature);
+
+    if (isValid) {
+      setVerified("true");
+      alert("유효한 서명입니다 ✅");
+    } else {
+      setVerified("false");
+      alert("서명 검증 실패 ❌");
     }
-
-    axiosInstance.post('/transactions/send', {
-      "receiver_address": receiver,
-      "amount": parseFloat(amount),
-    })
-      .then(() => {
-        alert('송금이 완료되었습니다.');
-        onClose();
-      })
-      .catch(err => {
-        console.error('송금 실패:', err);
-        alert('송금에 실패했습니다.');
-      });
-  };
+  } catch (err) {
+    console.error("검증 실패:", err);
+    alert("서명 중 오류 발생");
+    setVerified("false");
+  }
+};
 
   return (
     <Overlay>
-      <ModalContent>
-        <ModalTitle>송금하기</ModalTitle>
+      <ModalContent status={verified}>
+        <ModalTitle>트랜잭션 서명</ModalTitle>
         <Input
           placeholder="수신자 지갑 주소"
           value={receiver}
           onChange={(e) => setReceiver(e.target.value)}
+          disabled={verified === "true"}
+        />
+        <Input
+          placeholder="본인 지갑 개인 키"
+          value={privateKey}
+          onChange={(e) => setPrivateKey(e.target.value)}
+          disabled={verified === "true"}
         />
         <Input
           placeholder="보낼 금액 (HNC)"
@@ -95,10 +124,13 @@ export function SendModal({ onClose }) {
           onChange={(e) => setAmount(e.target.value)}
           type="number"
           min="0"
+          disabled={verified === "true"}
         />
         <ModalActions>
           <ModalButton cancel onClick={onClose}>취소</ModalButton>
-          <ModalButton onClick={confirmSend}>보내기</ModalButton>
+          <ModalButton onClick={verifySignature} verified={verified}>
+            {verified === "true" ? "✅ 서명됨" : "🔐 서명 확인"}
+          </ModalButton>
         </ModalActions>
       </ModalContent>
     </Overlay>

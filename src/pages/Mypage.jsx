@@ -66,6 +66,7 @@ export function Mypage() {
   const [wallet, setWallet] = useState('');
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
+  const [publicKey, setPublicKey] = useState('');
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
@@ -73,6 +74,7 @@ export function Mypage() {
     axiosInstance.get('/users/info')
       .then(res => {
         setWallet(res.data.wallet_address);
+        setPublicKey(res.data.wallet_public_key);
         return axiosInstance.get('/users/balance');
       })
       .then(res => {
@@ -120,7 +122,7 @@ export function Mypage() {
       </Section>
 
       {/* 송금 모달 */}
-      {showModal && <SendModal onClose={() => setShowModal(false)} />}
+      {showModal && <SendModal onClose={() => setShowModal(false)} publicKey={publicKey}/>}
     </PageContainer>
   );
 }
