@@ -1,7 +1,7 @@
 import { Login } from "./pages/Login"
 import { Signup } from "./pages/Signup"
 import { MarketPlace } from "./pages/MarketPlace.jsx"
-import { Mypage } from "./pages/MyPage.jsx"
+import { Mypage } from "./pages/Mypage.jsx"
 import { UploadProduct } from "./pages/UploadProduct.jsx"
 import { Product } from "./pages/Product.jsx"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
