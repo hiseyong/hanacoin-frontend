@@ -73,10 +73,23 @@ const CardList = styled.div`
 `;
 
 export function Home() {
-    const [deals, setDeals] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+  const [deals, setDeals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [wallet, setWallet] = useState('');
+  const [balance, setBalance] = useState(0);
 
     useEffect(()=>{
+    axiosInstance.get('/users/info')
+      .then(res => {
+        setWallet(res.data.wallet_address);
+        return axiosInstance.get('/users/balance');
+      })
+      .then(res => {
+        setBalance(res.data.balance);
+      })
+      .catch(err => {
+        console.error('지갑 정보 불러오기 실패:', err);
+      });
         axiosInstance.get('/alerts/recommended_deal')
         .then(response => {
             setDeals(response.data.recommended);
@@ -90,32 +103,32 @@ export function Home() {
 
   return (
     <PageContainer>
-      {/* 최신 소식 */}
-      <Section>
-        <SectionTitle>📢 최신 소식</SectionTitle>
-        <CardList>
-          <StaticCard>
-            <CardTitle>출시 기념 이벤트 진행 중!</CardTitle>
-            <CardContent>지금 가입하면 HANA 코인 10개 지급!</CardContent>
-          </StaticCard>
-          <StaticCard>
-            <CardTitle>앱 기능 업데이트 안내</CardTitle>
-            <CardContent>지갑 연동 및 거래 상세 페이지 개선 완료</CardContent>
-          </StaticCard>
-        </CardList>
-      </Section>
-
       {/* 공지사항 */}
       <Section>
         <SectionTitle>📌 공지사항</SectionTitle>
         <CardList>
           <StaticCard>
-            <CardTitle>고객센터 운영 시간 변경 안내</CardTitle>
-            <CardContent>평일 9시~18시로 단축 운영됩니다.</CardContent>
+            <CardTitle>송금 및 구매 기능 관련 안내</CardTitle>
+            <CardContent>구현이 안되어서 이용이 불가능합니다.</CardContent>
           </StaticCard>
           <StaticCard>
-            <CardTitle>서비스 이용약관 개정</CardTitle>
-            <CardContent>2025년 8월 1일부터 새로운 약관이 적용됩니다.</CardContent>
+            <CardTitle>진로연계 발표 안내</CardTitle>
+            <CardContent>오는 7월 15일, 진로연계 발표가 있습니다.</CardContent>
+          </StaticCard>
+        </CardList>
+      </Section>
+
+      {/* 계좌 정보 */}
+      <Section>
+        <SectionTitle>🧾 지갑 정보</SectionTitle>
+        <CardList>
+          <StaticCard>
+            <CardTitle>지갑 주소</CardTitle>
+            <CardContent>{wallet}</CardContent>
+          </StaticCard>
+          <StaticCard>
+            <CardTitle>계좌 잔고</CardTitle>
+            <CardContent>{Number(balance).toFixed(8)} HNC</CardContent>
           </StaticCard>
         </CardList>
       </Section>
